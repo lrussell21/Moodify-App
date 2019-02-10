@@ -6,6 +6,7 @@ import android.widget.Toast;
 
 public class createSpotifyAPIFetcher implements Runnable {
     spotifyAPIFetcher s;
+    public String userCode  = "";
     private boolean tokenSuccess;
 
     public createSpotifyAPIFetcher(spotifyAPIFetcher s){
@@ -15,10 +16,23 @@ public class createSpotifyAPIFetcher implements Runnable {
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void run(){
+        /*
         if(s.getToken()){
             tokenSuccess = true;
         }else{
             tokenSuccess = false;
+        }
+        */
+
+
+        if(s.checkRefreshToken()) {
+            tokenSuccess = true;
+        } else {
+            if (s.loginUser(userCode)) {
+                tokenSuccess = true;
+            } else {
+                tokenSuccess = false;
+            }
         }
     }
 

@@ -59,6 +59,7 @@ public class getSongIDs implements Runnable {
                     //System.out.println(output);
                     fullOuputString += output + "\n";
                 }
+                br.close();
                 conn.disconnect();
             } catch (MalformedURLException e) {
                 e.printStackTrace();
@@ -99,7 +100,7 @@ public class getSongIDs implements Runnable {
                 // Cover art album link
                 coverArtObj = trackObj.getJSONObject("album");
                 coverArtArray = coverArtObj.getJSONArray("images");
-                coverArtLinkObj = coverArtArray.getJSONObject(0);
+                coverArtLinkObj = coverArtArray.getJSONObject(1);
 
                 newSong = new songs(s, trackObj.getString("id"), artistObj.getString("name"), trackObj.getString("name"), coverArtLinkObj.getString("url"));
 

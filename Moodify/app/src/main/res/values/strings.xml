@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Moodify</string>
+    <string name="client_id">10187fa73dd54eb3833f69da476e6861</string>
+    <string name="secret_id">72bbadeb5355484db26245c552429326</string>
 </resources>

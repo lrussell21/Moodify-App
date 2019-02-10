@@ -1,12 +1,19 @@
 package com.russell.moodify;
 
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
+import android.provider.Settings;
 import android.support.annotation.RequiresApi;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -16,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 
 
+
 public class spotifyAPIFetcher {
     public ArrayList<songs> allSongs = new ArrayList<>();
     public ArrayList<songs> displaySongs = new ArrayList<>();
@@ -23,9 +31,13 @@ public class spotifyAPIFetcher {
     private String[] categories = {"pop", "mood", "edm_dance", "decades", "hiphop", "chill", "workout", "party"};
     //private String[] categories = {"pop", "mood", "edm_dance", "decades", "hiphop", "chill", "workout", "party", "focus", "sleep", "rock", "dinner", "jazz", "rnb", "romance", "indie_alt", "gaming", "soul", "classical"};
 
-    private static final String client_id = "10187fa73dd54eb3833f69da476e6861";
-    private static final String secret_id = "72bbadeb5355484db26245c552429326";
+    public String username = "";
+    private final String client_id;
+    private final String secret_id;
     private static String token;
+    private String refreshToken;
+
+    Context context;
 
     private static int saveLastPos = 0;
 
@@ -33,14 +45,22 @@ public class spotifyAPIFetcher {
     public boolean danceCheck = false;
     public boolean happyCheck = false;
     public boolean energyCheck = false;
+    public boolean gettingSongsFinished = false;
+    public boolean updateList = false;
     public double tolerance = 0.15;
 
-    public spotifyAPIFetcher() { }
+    public spotifyAPIFetcher(Context context) {
+        this.context = context;
+        client_id = context.getResources().getString(R.string.client_id);
+        secret_id = context.getResources().getString(R.string.secret_id);
+    }
+
 
     /**
      * Gives Spotify client id and secret id and returns token.
      * @return token for api use.
      */
+    /*
     @RequiresApi(api = Build.VERSION_CODES.O)
     public boolean getToken() {
 
@@ -69,6 +89,7 @@ public class spotifyAPIFetcher {
                     tokenStringReceive += output;
                     //System.out.println(output);
                 }
+                br.close();
                 setToken(tokenStringReceive);
             } catch (Exception e) {
                 System.out.printf(e.getMessage());
@@ -85,13 +106,219 @@ public class spotifyAPIFetcher {
 
     }
 
-    /**
+     /**
      * Parses token json for token then sets token variable.
      * @param serverToken
-     */
+      /
     private void setToken(String serverToken) {
         token = serverToken.substring(17, 100);
         System.out.println("TOKEN: " + token);
+    }
+
+    */
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public boolean checkRefreshToken(){
+        String filename = "userCredentials";
+        FileInputStream inputStream;
+        StringBuffer datax = new StringBuffer("");
+        try {
+            inputStream = context.openFileInput(filename);
+            InputStreamReader isr = new InputStreamReader(inputStream);
+            BufferedReader br = new BufferedReader(isr);
+
+            String readString = br.readLine();
+            while(readString != null){
+                datax.append(readString);
+                readString = br.readLine();
+            }
+            isr.close();
+            refreshToken = datax.toString();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        useRefreshToken();
+
+        if(getUserDetails()){
+            return true;
+        }else{
+            return false;
+        }
+
+    }
+
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private boolean getUserDetails(){
+        String spoturl = "https://api.spotify.com/v1/me";
+        String data = "";
+        try {
+            URL url = new URL(spoturl);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("Authorization", "Bearer " + token);
+
+
+            if (conn.getResponseCode() != 200) {
+                return false;
+                //throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
+            }
+
+
+            try {
+                BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+                String output;
+                //System.out.println("Output from Server ....");
+                while ((output = br.readLine()) != null) {
+                    data += output;
+                    //System.out.println(output);
+                }
+                br.close();
+            } catch (Exception e) {
+                System.out.printf(e.getMessage());
+            }
+            conn.disconnect();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        try {
+            JSONObject parseObj = new JSONObject(data);
+            System.out.println("-----------------------------------------------------------------------------------------------------------");
+            username = parseObj.getString("display_name");
+            System.out.println(data);
+        } catch (Exception ex){
+
+        }
+        return true;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void useRefreshToken(){
+
+        String spoturl = "https://accounts.spotify.com/api/token";
+        String urlParameters = "grant_type=refresh_token&refresh_token=" + refreshToken;
+        String data = "";
+        try {
+
+            URL url = new URL(spoturl + "?" + urlParameters);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            conn.setRequestProperty("Authorization", "Basic " + Base64.getEncoder().encodeToString((client_id + ":" + secret_id).getBytes()));
+
+
+            if (conn.getResponseCode() != 200) {
+                //throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
+            }
+
+
+            try {
+                BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+                String output;
+                //System.out.println("Output from Server ....");
+                while ((output = br.readLine()) != null) {
+                    data += output;
+                    //System.out.println(output);
+                }
+                br.close();
+            } catch (Exception e) {
+                System.out.printf(e.getMessage());
+            }
+            conn.disconnect();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        try {
+            JSONObject parseObj = new JSONObject(data);
+            token = parseObj.getString("access_token");
+        } catch (Exception ex){
+
+        }
+    }
+
+
+    /**
+     * Gives Spotify client id and user code and returns token and refresh token.
+     * @return token and refresh token for api use.
+     */
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public boolean loginUser(String code) {
+
+        String spoturl = "https://accounts.spotify.com/api/token";
+        String urlParameters = "grant_type=authorization_code&code=" + code + "&redirect_uri=moodify%3A%2F%2Flogincallback";
+        String tokenStringReceive = "";
+        try {
+
+            URL url = new URL(spoturl + "?" + urlParameters);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            conn.setRequestProperty("Authorization", "Basic " + Base64.getEncoder().encodeToString((client_id + ":" + secret_id).getBytes()));
+
+
+            if (conn.getResponseCode() != 200) {
+                throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
+            }
+
+
+            try {
+                BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+                String output;
+                //System.out.println("Output from Server ....---------------------------------------------------------------------");
+                while ((output = br.readLine()) != null) {
+                    tokenStringReceive += output;
+                    //System.out.println(output);
+                }
+                br.close();
+            } catch (Exception e) {
+                System.out.printf(e.getMessage());
+            }
+
+            conn.disconnect();
+
+
+            try {
+                JSONObject parseObj = new JSONObject(tokenStringReceive);
+                token = parseObj.getString("access_token");
+                String refreshToken = parseObj.getString("refresh_token");
+
+                String filename = "userCredentials";
+                String fileContents = refreshToken;
+                FileOutputStream outputStream;
+
+                try {
+                    outputStream = context.openFileOutput(filename, Context.MODE_PRIVATE);
+                    outputStream.write(fileContents.getBytes());
+                    outputStream.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            } catch (Exception ex){
+
+            }
+
+            getUserDetails();
+
+            return true;
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            return false;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     /**
@@ -138,6 +365,7 @@ public class spotifyAPIFetcher {
                     //System.out.println(output);
                     fullOuputString += output + "\n";
                 }
+                br.close();
                 conn.disconnect();
             } catch (MalformedURLException e) {
                 e.printStackTrace();
@@ -195,6 +423,7 @@ public class spotifyAPIFetcher {
                 System.out.println("Started thread: " + i);
                 s.start();
                 s.join();
+                updateList = true;
                 if(i % 10 == 0){
                     System.out.println("Getting track features...");
                     getFeatures = new Thread(this::getTrackFeatures);
@@ -205,6 +434,7 @@ public class spotifyAPIFetcher {
                 System.out.println(ex.getMessage());
             }
         }
+        gettingSongsFinished = true;
         System.out.println("NUMBER OF SONGS: " + allSongs.size());
     }
 
@@ -259,6 +489,7 @@ public class spotifyAPIFetcher {
                     //System.out.println(output);
                     fullOuputString += output + "\n";
                 }
+                br.close();
                 conn.disconnect();
             } catch (MalformedURLException e) {
                 e.printStackTrace();
@@ -322,15 +553,13 @@ public class spotifyAPIFetcher {
     public void checkAudioFeatures() {
         displaySongs.clear();
         for (songs song : allSongs) {
-            /*
             if(!danceCheck && !happyCheck && !energyCheck){
                 displaySongs = (ArrayList<songs>)allSongs.clone();
                 break;
             }
-            */
-            if ((this.dance <= (song.getDanceability() + tolerance) && this.dance >= (song.getDanceability() - tolerance))) {
-                if ((this.happy <= (song.getHappy() + tolerance) && this.happy >= (song.getHappy() - tolerance))) {
-                    if ((this.energy <= (song.getEnergy() + tolerance) && this.energy >= (song.getEnergy() - tolerance))) {
+            if ((this.dance <= (song.getDanceability() + tolerance) && this.dance >= (song.getDanceability() - tolerance)) || !danceCheck) {
+                if ((this.happy <= (song.getHappy() + tolerance) && this.happy >= (song.getHappy() - tolerance)) || !happyCheck) {
+                    if ((this.energy <= (song.getEnergy() + tolerance) && this.energy >= (song.getEnergy() - tolerance)) || !energyCheck) {
                         displaySongs.add(song);
                     }
                 }

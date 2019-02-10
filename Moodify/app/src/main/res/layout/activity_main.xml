@@ -5,123 +5,104 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:textColor="@color/colorPrimary"
+    android:background="@color/background"
     tools:context=".MainActivity">
 
     <ListView
         android:id="@+id/songList"
         android:layout_width="0dp"
-        android:layout_height="200dp"
+        android:layout_height="0dp"
         android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
+        android:background="@color/colorPrimary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/danceSeekBar" />
 
     <SeekBar
         android:id="@+id/danceSeekBar"
         style="@android:style/Widget.Material.Light.SeekBar"
-        android:layout_width="200dp"
+        android:layout_width="150dp"
         android:layout_height="20dp"
         android:layout_marginStart="8dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginTop="8dp"
         android:max="100"
         android:progress="0"
-        app:layout_constraintBottom_toTopOf="@+id/songList"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:progressBackgroundTint="@color/colorPrimary"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/happySeekBar" />
 
     <SeekBar
         android:id="@+id/happySeekBar"
         style="@android:style/Widget.Material.Light.SeekBar"
-        android:layout_width="200dp"
+        android:layout_width="150dp"
         android:layout_height="20dp"
         android:layout_marginStart="8dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginTop="8dp"
         android:max="100"
         android:progress="0"
-        app:layout_constraintBottom_toTopOf="@+id/danceSeekBar"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:progressBackgroundTint="@color/colorPrimary"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/energySeekBar" />
 
     <SeekBar
         android:id="@+id/energySeekBar"
-        android:layout_width="200dp"
+        android:layout_width="150dp"
         android:layout_height="20dp"
         android:layout_marginStart="8dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginTop="8dp"
         android:max="100"
         android:progress="0"
-        android:theme="@style/Base.TextAppearance.AppCompat.Medium"
-        app:layout_constraintBottom_toTopOf="@+id/happySeekBar"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:progressBackgroundTint="@color/colorPrimary"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/playButton" />
 
     <TextView
         android:id="@+id/danceTextView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
         android:text="Danceabilty: 0"
         android:textSize="14sp"
-        app:layout_constraintBottom_toTopOf="@+id/songList"
+        android:textColor="@color/colorPrimary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@+id/danceSeekBar" />
+        app:layout_constraintStart_toEndOf="@+id/danceCheckBox"
+        app:layout_constraintTop_toBottomOf="@+id/happyTextView" />
 
     <TextView
         android:id="@+id/happyTextView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
         android:text="Happy: 0"
         android:textSize="14sp"
-        app:layout_constraintBottom_toTopOf="@+id/danceSeekBar"
+        android:textColor="@color/colorPrimary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@+id/happySeekBar" />
+        app:layout_constraintStart_toEndOf="@+id/happyCheckBox"
+        app:layout_constraintTop_toBottomOf="@+id/energyTextView" />
 
     <TextView
         android:id="@+id/energyTextView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
         android:text="Energy: 0"
         android:textSize="14sp"
-        app:layout_constraintBottom_toTopOf="@+id/happySeekBar"
+        android:textColor="@color/colorPrimary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@+id/energySeekBar" />
-
-    <Button
-        android:id="@+id/tempButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="24dp"
-        android:layout_marginBottom="8dp"
-        android:text="getSongs"
-        app:layout_constraintBottom_toTopOf="@+id/energySeekBar"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0" />
-
-    <Button
-        android:id="@+id/refreshButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="24dp"
-        android:layout_marginBottom="8dp"
-        android:text="showAll"
-        app:layout_constraintBottom_toTopOf="@+id/energySeekBar"
-        app:layout_constraintStart_toEndOf="@+id/tempButton"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintStart_toEndOf="@+id/energyCheckBox"
+        app:layout_constraintTop_toBottomOf="@+id/playButton" />
 
     <ImageView
         android:id="@+id/albumImage"
@@ -143,6 +124,7 @@
         android:layout_marginEnd="8dp"
         android:text="Song Name"
         android:textSize="14sp"
+        android:textColor="@color/colorPrimary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.08"
         app:layout_constraintStart_toStartOf="parent"
@@ -156,6 +138,7 @@
         android:layout_marginEnd="8dp"
         android:text="Artist Name"
         android:textSize="12sp"
+        android:textColor="@color/colorPrimary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.08"
         app:layout_constraintStart_toStartOf="parent"
@@ -170,5 +153,60 @@
         android:text="Play"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/artistNameTextView" />
+
+    <Button
+        android:id="@+id/logOutButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:text="Sign Out"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/usertextView" />
+
+    <CheckBox
+        android:id="@+id/energyCheckBox"
+        android:layout_width="30dp"
+        android:layout_height="25dp"
+        android:layout_marginTop="4dp"
+        android:checked="false"
+        android:clickable="true"
+        android:buttonTint="@color/colorPrimary"
+        app:layout_constraintStart_toEndOf="@+id/energySeekBar"
+        app:layout_constraintTop_toBottomOf="@+id/playButton"
+        android:focusable="true" />
+
+    <CheckBox
+        android:id="@+id/happyCheckBox"
+        android:layout_width="30dp"
+        android:layout_height="25dp"
+        android:layout_marginTop="4dp"
+        android:checked="false"
+        android:clickable="true"
+        android:buttonTint="@color/colorPrimary"
+        app:layout_constraintStart_toEndOf="@+id/happySeekBar"
+        app:layout_constraintTop_toBottomOf="@+id/energyCheckBox"
+        android:focusable="true" />
+
+    <CheckBox
+        android:id="@+id/danceCheckBox"
+        android:layout_width="30dp"
+        android:layout_height="25dp"
+        android:layout_marginTop="4dp"
+        android:checked="false"
+        android:clickable="true"
+        android:buttonTint="@color/colorPrimary"
+        app:layout_constraintStart_toEndOf="@+id/danceSeekBar"
+        app:layout_constraintTop_toBottomOf="@+id/happyCheckBox"
+        android:focusable="true" />
+
+    <TextView
+        android:id="@+id/usertextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:text="Logged in as..."
+        android:textColor="@color/colorPrimary"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </android.support.constraint.ConstraintLayout>

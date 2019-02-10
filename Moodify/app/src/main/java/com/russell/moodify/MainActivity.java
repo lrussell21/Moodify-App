@@ -1,10 +1,12 @@
 package com.russell.moodify;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
@@ -13,14 +15,16 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.w3c.dom.Text;
 
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 
@@ -30,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
 
     ImageView albumImg;
 
+    Runnable updateListUI;
     ListView songList;
     ArrayAdapter<String> adapter;
     ArrayList<String> arrayList;
@@ -37,13 +42,20 @@ public class MainActivity extends AppCompatActivity {
     SeekBar danceSB;
     SeekBar happySB;
     SeekBar energySB;
+    TextView usersName;
     TextView danceTV;
     TextView happyTV;
     TextView energyTV;
     TextView songNameTextView;
     TextView artistNameTextView;
+    CheckBox energyCheckBox;
+    CheckBox happyCheckBox;
+    CheckBox danceCheckBox;
 
-    Thread t;
+    Thread imageThread = null;
+
+    boolean updateAllSongList = true;
+    Thread updateAllSongListThread = null;
 
     int selectedIndex;
 
@@ -53,17 +65,29 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        apiObject = new spotifyAPIFetcher();
+        apiObject = new spotifyAPIFetcher(MainActivity.this);
         apiObjectStarter = new createSpotifyAPIFetcher(apiObject);
+
+
+        try{
+            String tempCode = getIntent().getDataString();
+            String[] codeParts = tempCode.split("code=");
+            apiObjectStarter.userCode = codeParts[1];
+        }catch (Exception ex){
+
+        }
 
         Thread tokenStarterThread = new Thread(apiObjectStarter);
         tokenStarterThread.start();
+
         try{
+
             tokenStarterThread.join();
             if(apiObjectStarter.getTokenStatus()){
-                Toast.makeText(getApplicationContext(), "Successfully retrieved token!",Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Successfully logged in!",Toast.LENGTH_SHORT).show();
             }else{
-                Toast.makeText(getApplicationContext(), "Failed to retrieve token!",Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Failed login!",Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(MainActivity.this, MainLoginScreen.class));
             }
         }catch (Exception ex){
 
@@ -78,6 +102,9 @@ public class MainActivity extends AppCompatActivity {
         arrayList.add("No songs...");
         adapter.notifyDataSetChanged();
 
+
+
+        usersName = findViewById(R.id.usertextView);
         artistNameTextView = findViewById(R.id.artistNameTextView);
         songNameTextView = findViewById(R.id.songNameTextView);
         danceSB = findViewById(R.id.danceSeekBar);
@@ -86,13 +113,114 @@ public class MainActivity extends AppCompatActivity {
         danceTV = findViewById(R.id.danceTextView);
         happyTV = findViewById(R.id.happyTextView);
         energyTV = findViewById(R.id.energyTextView);
-
+        energyCheckBox = findViewById(R.id.energyCheckBox);
+        happyCheckBox = findViewById(R.id.happyCheckBox);
+        danceCheckBox = findViewById(R.id.danceCheckBox);
 
         albumImg = findViewById(R.id.albumImage);
+
+        usersName.setText("Logged in as " + apiObject.username);
 
         apiObject.getPlaylistIDsThreaded();
 
 
+        initListeners();
+
+        updateAllSongListThread = new Thread(this::updateList);
+        updateAllSongListThread.start();
+
+
+        updateListUI = new Runnable() {
+            @Override
+            public void run() {
+                adapter.notifyDataSetChanged();
+                songList.invalidateViews();
+
+                if(arrayList.size() > 0) {
+                    selectedIndex = 0;
+                    //albumImg.setImageResource(R.drawable.loading);
+                    imageThread = new Thread(MainActivity.this::imageSetter);
+                    imageThread.start();
+                }
+
+            }
+        };
+
+    }
+
+    private void checkBoxSongCheck(){
+        if(!apiObject.energyCheck && !apiObject.happyCheck && !apiObject.danceCheck){
+            listAllSongs();
+        }else{
+            filterSongs();
+        }
+    }
+
+    private void filterSongs(){
+        updateAllSongList = false;
+        apiObject.checkAudioFeatures();
+        arrayList.clear();
+        for(int i = 0; i < apiObject.displaySongs.size(); i++){
+            arrayList.add(apiObject.displaySongs.get(i).getArtist() + " - " + apiObject.displaySongs.get(i).getSongName());
+        }
+        //adapter.notifyDataSetChanged();
+        renderList();
+    }
+
+    private void listAllSongs(){
+        updateAllSongList = true;
+        arrayList.clear();
+        apiObject.displaySongs.clear();
+        for(int i = 0; i < apiObject.allSongs.size(); i++){
+            arrayList.add(apiObject.allSongs.get(i).getArtist() + " - " + apiObject.allSongs.get(i).getSongName());
+            apiObject.displaySongs.add(apiObject.allSongs.get(i));
+        }
+        //adapter.notifyDataSetChanged();
+        renderList();
+    }
+
+    private void imageSetter(){
+        artistNameTextView.setText(apiObject.displaySongs.get(selectedIndex).getArtist());
+        songNameTextView.setText(apiObject.displaySongs.get(selectedIndex).getSongName());
+        try {
+            String urldisplay = apiObject.displaySongs.get(selectedIndex).getCoverartLink();
+            Bitmap bmp = null;
+
+            InputStream in = new java.net.URL(urldisplay).openStream();
+            bmp = BitmapFactory.decodeStream(in);
+
+            if(bmp != null) {
+                albumImg.setImageBitmap(bmp);
+            }
+        } catch(Exception ex){
+            System.out.println(ex.toString());
+        }
+    }
+
+    private void updateList(){
+        while(!apiObject.gettingSongsFinished){
+            if(updateAllSongList && apiObject.updateList){
+                new Handler(Looper.getMainLooper()).post(new Runnable(){
+                    @Override
+                    public void run() {
+                        listAllSongs();
+                        apiObject.updateList = false;
+                    }
+                });
+            }
+            try{
+                Thread.sleep(1000);
+            }catch (Exception ex){
+                System.out.println(ex.toString());
+            }
+        }
+    }
+
+    private void renderList(){
+        runOnUiThread(updateListUI);
+    }
+
+    private void initListeners(){
         danceSB.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -129,7 +257,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
         energySB.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -148,33 +275,31 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
-        Button tempBut = findViewById(R.id.tempButton);
-
-        tempBut.setOnClickListener(new View.OnClickListener() {
+        energyCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onClick(View v) {
-                Toast.makeText(getApplicationContext(), "Getting top tracks!",Toast.LENGTH_SHORT).show();
-                apiObject.getTopTracks();
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                apiObject.energyCheck = isChecked;
+                checkBoxSongCheck();
             }
         });
 
-        Button refreshButton = findViewById(R.id.refreshButton);
-
-        refreshButton.setOnClickListener(new View.OnClickListener() {
+        happyCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onClick(View v) {
-                arrayList.clear();
-                for(int i = 0; i < apiObject.allSongs.size(); i++){
-                    apiObject.displaySongs.add(apiObject.allSongs.get(i));
-                    arrayList.add(apiObject.allSongs.get(i).getArtist() + " - " + apiObject.allSongs.get(i).getSongName());
-                }
-                adapter.notifyDataSetChanged();
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                apiObject.happyCheck = isChecked;
+                checkBoxSongCheck();
+            }
+        });
+
+        danceCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                apiObject.danceCheck = isChecked;
+                checkBoxSongCheck();
             }
         });
 
         Button playButton = findViewById(R.id.playButton);
-
         playButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -186,49 +311,38 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        Button loginButton = findViewById(R.id.logOutButton);
+        loginButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                String filename = "userCredentials";
+                String fileContents = "";
+                FileOutputStream outputStream;
+
+                try {
+                    outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
+                    outputStream.write(fileContents.getBytes());
+                    outputStream.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                startActivity(new Intent(MainActivity.this, MainLoginScreen.class));
+            }
+        });
+
 
         songList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 selectedIndex = position;
-                Thread test = new Thread(MainActivity.this::imageSetter);
-                test.start();
+                albumImg.setImageResource(R.drawable.loading);
+                imageThread = new Thread(MainActivity.this::imageSetter);
+                imageThread.start();
             }
         });
-
     }
 
-    private void filterSongs(){
-        apiObject.checkAudioFeatures();
-        arrayList.clear();
-        for(int i = 0; i < apiObject.displaySongs.size(); i++){
-            arrayList.add(apiObject.displaySongs.get(i).getArtist() + " - " + apiObject.displaySongs.get(i).getSongName());
-        }
-        adapter.notifyDataSetChanged();
-    }
 
-    private void imageSetter(){
-        artistNameTextView.setText(apiObject.displaySongs.get(selectedIndex).getArtist());
-        songNameTextView.setText(apiObject.displaySongs.get(selectedIndex).getSongName());
-        try {
-            String urldisplay = apiObject.displaySongs.get(selectedIndex).getCoverartLink();
-            Bitmap bmp = null;
-            try {
-                InputStream in = new java.net.URL(urldisplay).openStream();
-                bmp = BitmapFactory.decodeStream(in);
-            } catch (Exception e) {
-                //Log.e("Error", e.getMessage());
-                //Toast.makeText(getApplicationContext(), e.toString(),Toast.LENGTH_SHORT).show();
-                //System.out.println(e.toString());
-                e.printStackTrace();
-            }
-
-            if(bmp != null) {
-                albumImg.setImageBitmap(bmp);
-            }
-        } catch(Exception ex){
-            System.out.println(ex.toString());
-
-        }
-    }
 }
