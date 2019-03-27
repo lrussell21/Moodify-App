@@ -16,14 +16,6 @@ public class createSpotifyAPIFetcher implements Runnable {
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void run(){
-        /*
-        if(s.getToken()){
-            tokenSuccess = true;
-        }else{
-            tokenSuccess = false;
-        }
-        */
-
 
         if(s.checkRefreshToken()) {
             tokenSuccess = true;

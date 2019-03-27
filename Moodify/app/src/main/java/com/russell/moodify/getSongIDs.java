@@ -48,7 +48,9 @@ public class getSongIDs implements Runnable {
 
 
                 if (conn.getResponseCode() != 200) {
-                    throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
+                    System.out.println("ERROR WITH PLAYLIST ID: " + playlistID);
+                    System.out.println("Failed : HTTP error code : " + conn.getResponseCode() + " " + conn.getResponseMessage());
+                    //throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
                 }
 
                 BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));

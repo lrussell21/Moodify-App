@@ -16,9 +16,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:background="@color/colorPrimary"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/loadingIndicatorImageView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
@@ -27,7 +25,7 @@
     <SeekBar
         android:id="@+id/danceSeekBar"
         style="@android:style/Widget.Material.Light.SeekBar"
-        android:layout_width="150dp"
+        android:layout_width="200dp"
         android:layout_height="20dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
@@ -40,7 +38,7 @@
     <SeekBar
         android:id="@+id/happySeekBar"
         style="@android:style/Widget.Material.Light.SeekBar"
-        android:layout_width="150dp"
+        android:layout_width="200dp"
         android:layout_height="20dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
@@ -52,7 +50,7 @@
 
     <SeekBar
         android:id="@+id/energySeekBar"
-        android:layout_width="150dp"
+        android:layout_width="200dp"
         android:layout_height="20dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
@@ -110,10 +108,11 @@
         android:layout_height="200dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
+        android:background="@color/colorPrimary"
         android:cropToPadding="false"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/blankalbum" />
+        app:srcCompat="@drawable/loading" />
 
     <TextView
         android:id="@+id/songNameTextView"
@@ -122,9 +121,9 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:text="Song Name"
-        android:textSize="14sp"
+        android:text="Loading..."
         android:textColor="@color/colorPrimary"
+        android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.08"
         app:layout_constraintStart_toStartOf="parent"
@@ -136,9 +135,9 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
-        android:text="Artist Name"
-        android:textSize="12sp"
+        android:text="Loading..."
         android:textColor="@color/colorPrimary"
+        android:textSize="12sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.08"
         app:layout_constraintStart_toStartOf="parent"
@@ -157,7 +156,7 @@
     <Button
         android:id="@+id/logOutButton"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="51dp"
         android:layout_marginEnd="8dp"
         android:text="Sign Out"
         app:layout_constraintEnd_toEndOf="parent"
@@ -208,5 +207,29 @@
         android:textColor="@color/colorPrimary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/loadingIndicatorImageView"
+        android:layout_width="0dp"
+        android:layout_height="3dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:srcCompat="@android:color/holo_red_light" />
+
+    <Spinner
+        android:id="@+id/categorySpinner"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="24dp"
+        android:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@+id/energySeekBar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@+id/playButton"
+        app:layout_constraintTop_toTopOf="@+id/playButton" />
 
 </android.support.constraint.ConstraintLayout>
