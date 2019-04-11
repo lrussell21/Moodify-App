@@ -2,7 +2,11 @@ package com.russell.moodify;
 
 public class songs {
     private double danceability = -1.0, happy = -1.0, energy = -1.0;
-    private String artist, songName, ID, coverartLink;
+    private String artist;
+    private String songName;
+    private String ID;
+    private String coverartLink;
+    private String coverartLinkLight;
 
     /**
      * Initialize song object with specified values.
@@ -12,11 +16,12 @@ public class songs {
      * @param songName Song's name.
      * @param coverartLink Link to song's album cover art.
      */
-    public songs(spotifyAPIFetcher s ,String ID, String artist, String songName, String coverartLink){
+    public songs(spotifyAPIFetcher s ,String ID, String artist, String songName, String coverartLink, String coverartLinkLight){
         this.ID = ID;
         this.artist = artist;
         this.songName = songName;
         this.coverartLink = coverartLink;
+        this.coverartLinkLight = coverartLinkLight;
         s.allSongs.add(this);
     }
 
@@ -45,11 +50,19 @@ public class songs {
     }
 
     /**
-     * Get song's album art link.
+     * Get song's album art link 300x300.
      * @return string of link to cover art.
      */
     public String getCoverartLink() {
         return coverartLink;
+    }
+
+    /**
+     * Get song's album art link 64x64.
+     * @return string of link to cover art.
+     */
+    public String getCoverartLinkLight() {
+        return coverartLinkLight;
     }
 
     /**

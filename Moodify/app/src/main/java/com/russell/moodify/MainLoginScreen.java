@@ -56,7 +56,9 @@ public class MainLoginScreen extends AppCompatActivity {
                 String spoturl = "https://accounts.spotify.com/authorize";
                 String uri = "redirect_uri=moodify%3A%2F%2Flogincallback";
                 String client_id = getResources().getString(R.string.client_id);
-                String fullURL = spoturl + "?client_id=" + client_id + "&response_type=code&" + uri + "&scope=playlist-read-private%20user-library-read&state=34fFs29kd09";
+                //String fullURL = spoturl + "?client_id=" + client_id + "&response_type=code&" + uri + "&scope=playlist-read-private%20user-library-read&state=34fFs29kd09";
+                String fullURL = spoturl + "?client_id=" + client_id + "&response_type=code&" + uri +
+                        "&scope=playlist-read-private%20user-library-read%20user-read-playback-state%20app-remote-control%20user-modify-playback-state%20user-read-currently-playing%20streaming&state=34fFs29kd09";
 
                 Uri urigo = Uri.parse(fullURL);
                 Intent intent = new Intent(Intent.ACTION_VIEW,urigo);

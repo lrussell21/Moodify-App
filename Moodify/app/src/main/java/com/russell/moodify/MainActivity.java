@@ -38,17 +38,20 @@ public class MainActivity extends AppCompatActivity {
     ImageView albumImg;
     ImageView loadingInd;
     ListView songList;
-    ArrayAdapter<String> adapter;
-    ArrayList<String> songArrayList;
+    //ArrayAdapter<String> adapter;
+    songListAdapter adapter;
+    ArrayList<songList> songArrayList;
     ArrayAdapter<String> adapterCategory;
     ArrayList<String> categoryArrayList;
     SeekBar danceSB;
     SeekBar happySB;
     SeekBar energySB;
+    SeekBar toleranceSB;
     TextView usersName;
     TextView danceTV;
     TextView happyTV;
     TextView energyTV;
+    TextView toleranceTV;
     TextView songNameTextView;
     TextView artistNameTextView;
     CheckBox energyCheckBox;
@@ -61,6 +64,9 @@ public class MainActivity extends AppCompatActivity {
     Thread imageThread = null;
     int selectedIndex;
     String selectedLink;
+    double selectedEnergy = 1;
+    double selectedHappy = 1;
+    double selectedDanceability = 1;
 
     //@RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -97,14 +103,20 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
+        //Original
+        //songList = findViewById(R.id.songList);
+        //songArrayList = new ArrayList<String>();
+        //adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_activated_1, songArrayList);
+        //adapter.setNotifyOnChange(true);
+        //songList.setAdapter(adapter);
+
         songList = findViewById(R.id.songList);
-        songArrayList = new ArrayList<String>();
-        adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_activated_1, songArrayList);
-        adapter.setNotifyOnChange(true);
+        songArrayList = new ArrayList<songList>();
+        adapter = new songListAdapter(this, R.layout.songlistadapter_view_layout, songArrayList);
         songList.setAdapter(adapter);
 
-        songArrayList.add("Loading...");
-        adapter.notifyDataSetChanged();
+        //songArrayList.add("Loading...");
+        //adapter.notifyDataSetChanged();
 
 
         categorySpinner = findViewById(R.id.categorySpinner);
@@ -122,9 +134,11 @@ public class MainActivity extends AppCompatActivity {
         danceSB = findViewById(R.id.danceSeekBar);
         happySB = findViewById(R.id.happySeekBar);
         energySB = findViewById(R.id.energySeekBar);
+        toleranceSB = findViewById(R.id.toleranceSeekBar);
         danceTV = findViewById(R.id.danceTextView);
         happyTV = findViewById(R.id.happyTextView);
         energyTV = findViewById(R.id.energyTextView);
+        toleranceTV = findViewById(R.id.toleranceTextView);
         energyCheckBox = findViewById(R.id.energyCheckBox);
         happyCheckBox = findViewById(R.id.happyCheckBox);
         danceCheckBox = findViewById(R.id.danceCheckBox);
@@ -201,6 +215,24 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        toleranceSB.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                toleranceTV.setText("Tolerance: " + progress);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                apiObject.tolerance = (double)seekBar.getProgress() / 100;
+                filterSongs();
+            }
+        });
+
         energyCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -230,12 +262,60 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 try {
+
+                    // DELETE
+                    apiObject.getCurrentDeviceThreaded();
+
+
                     Uri uri = Uri.parse(selectedLink);
                     Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                     startActivity(intent);
                 }catch (Exception ex){
 
                 }
+            }
+        });
+
+        // Sets mood to one similar to selected song.
+        Button similarButton = findViewById(R.id.similarButton);
+        similarButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Similar
+                // Set tolerance to 10, set bars to songs.
+                if(!energyCheckBox.isChecked()){
+                    energyCheckBox.setChecked(!energyCheckBox.isChecked());
+                    //apiObject.energyCheck = true;
+                }
+                if(!happyCheckBox.isChecked()){
+                    happyCheckBox.setChecked(!happyCheckBox.isChecked());
+                    //apiObject.happyCheck = true;
+                }
+                if(!danceCheckBox.isChecked()){
+                    danceCheckBox.setChecked(!danceCheckBox.isChecked());
+                    //apiObject.danceCheck = true;
+                }
+
+                energySB.setProgress((int)(selectedEnergy * 100));
+                apiObject.energy = selectedEnergy;
+                energyTV.setText("Energy: " + (int)(selectedEnergy * 100));
+
+                happySB.setProgress((int)(selectedHappy * 100));
+                apiObject.happy = selectedHappy;
+                happyTV.setText("Happy: " + (int)(selectedHappy * 100));
+
+                danceSB.setProgress((int)(selectedDanceability * 100));
+                apiObject.dance = selectedDanceability;
+                danceTV.setText("Danceability: " + (int)(selectedDanceability * 100));
+
+                toleranceSB.setProgress(10);
+                toleranceTV.setText("Tolerance: 10");
+
+                //Toast.makeText(getApplicationContext(), "Selected energy: " + selectedEnergy + " : " + apiObject.energy,Toast.LENGTH_SHORT).show();
+
+                checkBoxSongCheck();
+                //Toast.makeText(getApplicationContext(), "Test failed successfully!",Toast.LENGTH_SHORT).show();
+
             }
         });
 
@@ -265,6 +345,9 @@ public class MainActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if(songArrayList.size() > 0) {
                     selectedLink = "https://open.spotify.com/track/" + apiObject.displaySongs.get(position).getID();
+                    selectedEnergy = apiObject.displaySongs.get(position).getEnergy();
+                    selectedHappy = apiObject.displaySongs.get(position).getHappy();
+                    selectedDanceability = apiObject.displaySongs.get(position).getDanceability();
                 }
                 selectedIndex = position;
                 albumImg.setImageResource(R.drawable.loading);
@@ -282,6 +365,9 @@ public class MainActivity extends AppCompatActivity {
                 adapter.notifyDataSetChanged();
                 apiObject.selectedCategory = apiObject.categoryIDs.get(position);
                 apiObject.getPlaylistIDsThreadedCategorySelected();
+                apiObject.gettingSongsFinished = false;
+
+                updateAllSongList = true;
                 updateListThreaded();
                 Toast.makeText(getApplicationContext(), "Selected new genre!",Toast.LENGTH_SHORT).show();
 
@@ -315,7 +401,7 @@ public class MainActivity extends AppCompatActivity {
         apiObject.checkAudioFeatures();
         songArrayList.clear();
         for(int i = 0; i < apiObject.displaySongs.size(); i++){
-            songArrayList.add(apiObject.displaySongs.get(i).getArtist() + " - " + apiObject.displaySongs.get(i).getSongName());
+            songArrayList.add(new songList(apiObject.displaySongs.get(i).getSongName(), apiObject.displaySongs.get(i).getArtist(), apiObject.displaySongs.get(i).getCoverartLinkLight()));
         }
         adapter.notifyDataSetChanged();
     }
@@ -327,8 +413,10 @@ public class MainActivity extends AppCompatActivity {
         updateAllSongList = true;
         songArrayList.clear();
         apiObject.displaySongs.clear();
+        songList sL;
         for(int i = 0; i < apiObject.allSongs.size(); i++){
-            songArrayList.add(apiObject.allSongs.get(i).getArtist() + " - " + apiObject.allSongs.get(i).getSongName());
+            sL = new songList(apiObject.allSongs.get(i).getSongName(), apiObject.allSongs.get(i).getArtist(), apiObject.allSongs.get(i).getCoverartLinkLight());
+            songArrayList.add(sL);
             apiObject.displaySongs.add(apiObject.allSongs.get(i));
         }
         adapter.notifyDataSetChanged();
@@ -369,12 +457,12 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         listAllSongs();
-                        apiObject.updateList = false;
+                        //apiObject.updateList = false;
                     }
                 });
             }
             try{
-                Thread.sleep(1000);
+                Thread.sleep(100);
             }catch (Exception ex){
                 System.out.println(ex.toString());
             }

@@ -89,6 +89,7 @@ public class getSongIDs implements Runnable {
             JSONObject coverArtObj;
             JSONArray coverArtArray;
             JSONObject coverArtLinkObj;
+            JSONObject coverArtLinkObj2;
 
             for(int i = 0; i < dataArray.length(); i++){
                 indTrack = dataArray.getJSONObject(i);
@@ -102,9 +103,10 @@ public class getSongIDs implements Runnable {
                 // Cover art album link
                 coverArtObj = trackObj.getJSONObject("album");
                 coverArtArray = coverArtObj.getJSONArray("images");
-                coverArtLinkObj = coverArtArray.getJSONObject(1);
+                coverArtLinkObj = coverArtArray.getJSONObject(1); // 300x300
+                coverArtLinkObj2 = coverArtArray.getJSONObject(2);// 64x64
 
-                newSong = new songs(s, trackObj.getString("id"), artistObj.getString("name"), trackObj.getString("name"), coverArtLinkObj.getString("url"));
+                newSong = new songs(s, trackObj.getString("id"), artistObj.getString("name"), trackObj.getString("name"), coverArtLinkObj.getString("url"), coverArtLinkObj2.getString("url"));
 
             }
         } catch (JSONException e) {

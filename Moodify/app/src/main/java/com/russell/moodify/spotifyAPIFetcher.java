@@ -22,6 +22,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 
 
 public class spotifyAPIFetcher {
@@ -36,6 +37,7 @@ public class spotifyAPIFetcher {
     //private String[] categories = {"pop", "mood", "edm_dance", "decades", "hiphop", "chill", "workout", "party", "focus", "sleep", "rock", "dinner", "jazz", "rnb", "romance", "indie_alt", "gaming", "soul", "classical"};
 
     public String username = "";
+    public String currentPlayingDeviceID = "";
     private final String client_id;
     private final String secret_id;
     private static String token;
@@ -288,16 +290,24 @@ public class spotifyAPIFetcher {
      */
     public void getPlaylistIDsThreadedCategorySelected() {
         //playlistIDThreadedCategorySelected.interrupt();
-        threadNumber++;
-        if(allSongs.size() != 0) {
+
+        if(allSongs.size() != 0 && !playlistThreadRun) {
             playlistThreadRun = false;
+            threadNumber++;
             try {
+                int maxRun = 0;
                 do {
+                    if(maxRun >= 20){
+                        playlistThreadRun = true;
+                    }
                     Thread.sleep(50);
+                    maxRun++;
                 } while (!playlistThreadRun);
             } catch (Exception ex) {
 
             }
+        }else{
+            threadNumber++;
         }
         Thread playlistIDThreadedCategorySelected = new Thread(this::getPlaylistIDsCategorySelected);
         playlistIDThreadedCategorySelected.start();
@@ -360,6 +370,7 @@ public class spotifyAPIFetcher {
 
             }
         }
+
         playlistIDToSongs();
     }
 
@@ -411,7 +422,7 @@ public class spotifyAPIFetcher {
             } else {
                 amountOfPlaylists = items.length();
             }
-            for (int i = 0; i < items.length(); i++) {
+            for (int i = 0; i < amountOfPlaylists; i++) {
                 playlistObj = items.getJSONObject(i);
                 playlistIDs.add(playlistObj.getString("id"));
             }
@@ -488,57 +499,90 @@ public class spotifyAPIFetcher {
     /**
      * Goes through each playlist, creates a thread then gets all the songs from the playlist and adds it to allsongs Arraylist.
      */
-    /*
     private void playlistIDToSongs() {
 
         //TESTING DELETE
         allSongs.clear();
         displaySongs.clear();
+        saveLastPos = 0;
+
+        int currentThreadNumber = threadNumber;
+
+        gettingSongsFinished = false;
+        updateList = false;
 
         getSongIDs threadSong;
         Thread getFeatures;
-        Thread[] s = new Thread[5];
+        Thread s[] = new Thread[5];
         //int saveSize = 0;
-        System.out.println("Amount of Playlists: " + playlistIDs.size());
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < playlistIDs.size(); i++) {
             try {
                 //Thread.sleep(100);
-                if(playlistIDs.size() >= i) {
-
-
-                    threadSong = new getSongIDs(this, token, playlistIDs.get(i));
-                    s[i] = new Thread(threadSong);
-                    System.out.println("Started thread: " + i);
-                    s[i].start();
+                /*
+                if(currentThreadNumber != threadNumber){
+                    playlistThreadRun = true;
+                    Thread.currentThread().interrupt();
+                    return;
                 }
+                */
+                threadSong = new getSongIDs(this, token, playlistIDs.get(i));
+                s[i] = new Thread(threadSong);
+                System.out.println("Started thread: " + i);
+                s[i].start();
+                //s.join();
                 //updateList = true; // For MainActivity to know when to update list.
+                /*
+                if(i % 3 == 0){
+                    System.out.println("Getting track features...");
+                    getFeatures = new Thread(this::getTrackFeatures);
+                    getFeatures.start();
+                    getFeatures.join();
+                }
+                */
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
             }
         }
-        try {
-            for(int i = 0; i < 5; i++){
-                s[i].join();
+        //updateList = true;
+        try{
+            for(int i = 0; i < s.length; i++){
+                // In case there are less than 5 playlists so a thread in the array isn't started.
+                if(s[i].isAlive()) {
+                    s[i].join();
+                }
             }
-            updateList = true; // For MainActivity to know when to update list.
+        }catch (Exception ex){
+
+        }
+
+        try{
             System.out.println("Getting track features...");
             getFeatures = new Thread(this::getTrackFeatures);
             getFeatures.start();
             getFeatures.join();
-        }catch(Exception ex){
+        }catch (Exception ex){
+
+        }
+        updateList = true;
+        // So updateList thread has chance to execute listAll
+        try{
+            Thread.sleep(100);
+        } catch (Exception ex){
 
         }
         gettingSongsFinished = true;
+        playlistThreadRun = true;
         System.out.println("NUMBER OF SONGS: " + allSongs.size());
     }
-*/
 
-
-    private void playlistIDToSongs() {
+    //OLD
+    /*
+        private void playlistIDToSongs() {
 
         //TESTING DELETE
         allSongs.clear();
         displaySongs.clear();
+        saveLastPos = 0;
 
         int currentThreadNumber = threadNumber;
 
@@ -585,6 +629,8 @@ public class spotifyAPIFetcher {
         System.out.println("NUMBER OF SONGS: " + allSongs.size());
     }
 
+     */
+
     /**
      * Starts getTrackFeatures in a thread so network isn't on main thread.
      */
@@ -603,6 +649,7 @@ public class spotifyAPIFetcher {
             int count = saveLastPos;
             int bounds = saveLastPos + 100;
             String urlIDs = "";
+            // Creates string of song IDs to send to API for track features.
             for (int song = saveLastPos; song < bounds; song++) {
                 if (song < allSongs.size()) {
                     urlIDs += ",";
@@ -666,20 +713,111 @@ public class spotifyAPIFetcher {
         System.out.println("All song data retrieved!...");
     }
 
+    public void getCurrentDeviceThreaded(){
+        Thread t = new Thread(this::getCurrentDevice);
+        t.start();
+    }
+
+    private void getCurrentDevice(){
+
+        String fullOuputString = "";
+        try {
+            URL url = new URL("https://api.spotify.com/v1/me/player/devices");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("Authorization", "Bearer " + token);
+
+            if (conn.getResponseCode() != 200) {
+                System.out.println(conn.getResponseMessage());
+                throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
+            }
+
+            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+
+            String output;
+            //System.out.println("Output from Server ....");
+            while ((output = br.readLine()) != null) {
+                //System.out.println(output);
+                fullOuputString += output + "\n";
+            }
+            br.close();
+            conn.disconnect();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //System.out.println(fullOuputString);
+        // Parse incoming Json for playlist ID's.
+        try {
+
+            JSONObject parseObj = new JSONObject(fullOuputString);
+            //JSONObject mainObj = parseObj.getJSONObject("devices");
+            JSONArray items = parseObj.getJSONArray("devices");
+
+            JSONObject playlistObj;
+            for(int i = 0; i < items.length(); i++) {
+                playlistObj = items.getJSONObject(i);
+                if(playlistObj.getString("is_active") == "true"){
+                    currentPlayingDeviceID = playlistObj.getString("id");
+                    break;
+                    //System.out.println(playlistObj.getString("id"));
+                }
+            }
+            //System.out.println("Test Output:");
+            //System.out.println(playlistObj.getString("id"));
+            /*
+            JSONObject playlistObj;
+            int amountOfPlaylists;
+            if (items.length() > 5) {
+                amountOfPlaylists = 5;
+            } else {
+                amountOfPlaylists = items.length();
+            }
+            for (int i = 0; i < items.length(); i++) {
+                playlistObj = items.getJSONObject(i);
+                playlistIDs.add(playlistObj.getString("id"));
+            }
+            */
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+
+
+
+    }
+
+    public void playSong(){
+        if(currentPlayingDeviceID == ""){
+            getCurrentDeviceThreaded();
+        }
+
+        // Try to play on device.
+        /*
+        https://api.spotify.com/v1/me/player
+{"device_ids":["3888c7eaa9d20e71b9a84f58718127d2db4a0ef0"],"play":true}
+https://api.spotify.com/v1/me/player/play
+{"uris":["spotify:track:7mYUeJq8M8S8kzDZUs6o23"],"offset":{"position":0}}
+         */
+    }
+
     /**
      * Checks if each songs track features match the user's input in the UI.
      */
     public void checkAudioFeatures() {
         displaySongs.clear();
-        for (songs song : allSongs) {
-            if(!danceCheck && !happyCheck && !energyCheck){
-                displaySongs = (ArrayList<songs>)allSongs.clone();
-                break;
-            }
-            if ((this.dance <= (song.getDanceability() + tolerance) && this.dance >= (song.getDanceability() - tolerance)) || !danceCheck) {
-                if ((this.happy <= (song.getHappy() + tolerance) && this.happy >= (song.getHappy() - tolerance)) || !happyCheck) {
-                    if ((this.energy <= (song.getEnergy() + tolerance) && this.energy >= (song.getEnergy() - tolerance)) || !energyCheck) {
-                        displaySongs.add(song);
+        if(!danceCheck && !happyCheck && !energyCheck){
+            displaySongs = (ArrayList<songs>)allSongs.clone();
+        }else {
+            for (songs song : allSongs) {
+                if ((this.dance <= (song.getDanceability() + tolerance) && this.dance >= (song.getDanceability() - tolerance)) || !danceCheck) {
+                    if ((this.happy <= (song.getHappy() + tolerance) && this.happy >= (song.getHappy() - tolerance)) || !happyCheck) {
+                        if ((this.energy <= (song.getEnergy() + tolerance) && this.energy >= (song.getEnergy() - tolerance)) || !energyCheck) {
+                            displaySongs.add(song);
+                        }
                     }
                 }
             }
