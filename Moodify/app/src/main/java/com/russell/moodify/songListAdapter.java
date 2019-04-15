@@ -13,6 +13,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +25,6 @@ public class songListAdapter extends ArrayAdapter<songList> {
     private Context mContext;
     private int mResource;
     private int lastPosition = -1;
-
 
     static class ViewHolder{
         TextView songName;
@@ -72,7 +73,9 @@ public class songListAdapter extends ArrayAdapter<songList> {
 
         holder.songName.setText(sList.getSongName());
         holder.songArtist.setText(sList.getSongArtist());
-        new DownloadImageTask(holder.albumImage).execute(albumUrl);
+        //new DownloadImageTask(holder.albumImage).execute(albumUrl);
+        Picasso.with(mContext).load(albumUrl).into(holder.albumImage);
+
 
 
         return convertView;

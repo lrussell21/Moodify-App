@@ -10,6 +10,7 @@ import android.util.Base64;
 import android.widget.Toast;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -17,6 +18,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -33,18 +35,18 @@ public class spotifyAPIFetcher {
     public ArrayList<String> categoryNames = new ArrayList<>();
     public String selectedCategory;
 
+    Context context;
+
     private String[] categories = {"pop", "mood", "edm_dance", "decades", "hiphop", "chill", "workout", "party"};
     //private String[] categories = {"pop", "mood", "edm_dance", "decades", "hiphop", "chill", "workout", "party", "focus", "sleep", "rock", "dinner", "jazz", "rnb", "romance", "indie_alt", "gaming", "soul", "classical"};
 
     public String username = "";
     public String currentPlayingDeviceID = "";
+    private String currentID = "";
     private final String client_id;
     private final String secret_id;
     private static String token;
     private String refreshToken;
-
-
-    Context context;
 
     private static int saveLastPos = 0;
 
@@ -57,6 +59,8 @@ public class spotifyAPIFetcher {
     public volatile boolean updateList = false;
     public double tolerance = 0.15;
     public int threadNumber = 0;
+    private Thread playlistIDThreadedCategorySelected = new Thread();
+    private boolean playOnCurrentDeviceSucceeded;
 
     public spotifyAPIFetcher(Context context) {
         this.context = context;
@@ -286,34 +290,6 @@ public class spotifyAPIFetcher {
     }
 
     /**
-     * Creates a background thread to start gathering playlists.
-     */
-    public void getPlaylistIDsThreadedCategorySelected() {
-        //playlistIDThreadedCategorySelected.interrupt();
-
-        if(allSongs.size() != 0 && !playlistThreadRun) {
-            playlistThreadRun = false;
-            threadNumber++;
-            try {
-                int maxRun = 0;
-                do {
-                    if(maxRun >= 20){
-                        playlistThreadRun = true;
-                    }
-                    Thread.sleep(50);
-                    maxRun++;
-                } while (!playlistThreadRun);
-            } catch (Exception ex) {
-
-            }
-        }else{
-            threadNumber++;
-        }
-        Thread playlistIDThreadedCategorySelected = new Thread(this::getPlaylistIDsCategorySelected);
-        playlistIDThreadedCategorySelected.start();
-    }
-
-    /**
      * Gets list of playlist ID's from each category.
      */
     public void getPlaylistIDs() {
@@ -357,8 +333,8 @@ public class spotifyAPIFetcher {
 
                 JSONObject playlistObj;
                 int amountOfPlaylists;
-                if(items.length() > 5){
-                    amountOfPlaylists = 5;
+                if(items.length() > 10){
+                    amountOfPlaylists = 10;
                 }else{
                     amountOfPlaylists = items.length();
                 }
@@ -373,6 +349,35 @@ public class spotifyAPIFetcher {
 
         playlistIDToSongs();
     }
+
+    /**
+     * Creates a background thread to start gathering playlists.
+     */
+    public void getPlaylistIDsThreadedCategorySelected() {
+
+        if(allSongs.size() != 0 && !playlistThreadRun) {
+            playlistThreadRun = false;
+            threadNumber++;
+            try {
+                int maxRun = 0;
+                do {
+                    if(maxRun >= 20){
+                        playlistThreadRun = true;
+                    }
+                    Thread.sleep(50);
+                    maxRun++;
+                } while (!playlistThreadRun);
+            } catch (Exception ex) {
+
+            }
+        }else{
+            threadNumber++;
+        }
+
+        playlistIDThreadedCategorySelected = new Thread(this::getPlaylistIDsCategorySelected);
+        playlistIDThreadedCategorySelected.start();
+    }
+
 
     /**
      * Gets list of playlist ID's from each category.
@@ -417,8 +422,8 @@ public class spotifyAPIFetcher {
 
             JSONObject playlistObj;
             int amountOfPlaylists;
-            if (items.length() > 5) {
-                amountOfPlaylists = 5;
+            if (items.length() > 10) {
+                amountOfPlaylists = 10;
             } else {
                 amountOfPlaylists = items.length();
             }
@@ -513,7 +518,7 @@ public class spotifyAPIFetcher {
 
         getSongIDs threadSong;
         Thread getFeatures;
-        Thread s[] = new Thread[5];
+        Thread s[] = new Thread[10]; // Max 10 IDs from categoryToIDs
         //int saveSize = 0;
         for (int i = 0; i < playlistIDs.size(); i++) {
             try {
@@ -546,23 +551,21 @@ public class spotifyAPIFetcher {
         //updateList = true;
         try{
             for(int i = 0; i < s.length; i++){
-                // In case there are less than 5 playlists so a thread in the array isn't started.
+                // In case there are less than 10 playlists so a thread in the array isn't started.
                 if(s[i].isAlive()) {
                     s[i].join();
                 }
             }
-        }catch (Exception ex){
 
-        }
-
-        try{
             System.out.println("Getting track features...");
             getFeatures = new Thread(this::getTrackFeatures);
             getFeatures.start();
             getFeatures.join();
+
         }catch (Exception ex){
 
         }
+
         updateList = true;
         // So updateList thread has chance to execute listAll
         try{
@@ -731,7 +734,7 @@ public class spotifyAPIFetcher {
 
             if (conn.getResponseCode() != 200) {
                 System.out.println(conn.getResponseMessage());
-                throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
+                //throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
             }
 
             BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
@@ -790,18 +793,56 @@ public class spotifyAPIFetcher {
 
     }
 
-    public void playSong(){
-        if(currentPlayingDeviceID == ""){
-            getCurrentDeviceThreaded();
+    public boolean playOnCurrentDeviceThreaded(String ID){
+        currentID = ID;
+        playOnCurrentDeviceSucceeded = true;
+        Thread t = new Thread(this::playOnCurrentDevice);
+        t.start();
+        try {
+            t.join();
+        }catch (Exception ex){
+            System.out.println(ex.getMessage());
         }
+        return playOnCurrentDeviceSucceeded;
+    }
 
-        // Try to play on device.
-        /*
-        https://api.spotify.com/v1/me/player
-{"device_ids":["3888c7eaa9d20e71b9a84f58718127d2db4a0ef0"],"play":true}
-https://api.spotify.com/v1/me/player/play
-{"uris":["spotify:track:7mYUeJq8M8S8kzDZUs6o23"],"offset":{"position":0}}
-         */
+    public void playOnCurrentDevice(){
+
+        String uriLink = "{\"uris\": [\"spotify:track:" + currentID + "\"]}";
+
+        String fullOuputString = "";
+        try {
+            URL url = new URL("https://api.spotify.com/v1/me/player/play");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("PUT");
+            //conn.setRequestProperty("Content-Type", "application/json");
+            //conn.setRequestProperty("uris", uriLink);
+            conn.setRequestProperty("Authorization", "Bearer " + token);
+            OutputStreamWriter out = new OutputStreamWriter(
+                    conn.getOutputStream());
+            out.write(uriLink);
+            out.close();
+
+            // This request uses a 204 as successful
+            if (conn.getResponseCode() != 204) {
+                System.out.println(conn.getResponseMessage());
+                playOnCurrentDeviceSucceeded = false;
+                conn.disconnect();
+                return;
+                //throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
+            }
+
+
+
+
+            conn.disconnect();
+        } catch (MalformedURLException e) {
+            System.out.println(e.getMessage());
+            //e.printStackTrace();
+        } catch (IOException e) {
+            //e.printStackTrace();
+            System.out.println(e.getMessage());
+        }
     }
 
     /**

@@ -108,6 +108,7 @@ public class getSongIDs implements Runnable {
 
                 newSong = new songs(s, trackObj.getString("id"), artistObj.getString("name"), trackObj.getString("name"), coverArtLinkObj.getString("url"), coverArtLinkObj2.getString("url"));
 
+                System.out.println("CREATED NEW SONG OBJECT-----------------------" + i);
             }
         } catch (JSONException e) {
             e.printStackTrace();

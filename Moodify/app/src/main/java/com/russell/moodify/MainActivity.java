@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.media.Image;
 import android.net.Uri;
@@ -21,6 +22,7 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SeekBar;
@@ -62,8 +64,9 @@ public class MainActivity extends AppCompatActivity {
     boolean updateAllSongList = true;
     Thread updateAllSongListThread = null;
     Thread imageThread = null;
-    int selectedIndex;
+    int selectedIndex = -1;
     String selectedLink;
+    String selectedID;
     double selectedEnergy = 1;
     double selectedHappy = 1;
     double selectedDanceability = 1;
@@ -103,6 +106,8 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
+        apiObject.getCurrentDeviceThreaded();
+
         //Original
         //songList = findViewById(R.id.songList);
         //songArrayList = new ArrayList<String>();
@@ -113,6 +118,7 @@ public class MainActivity extends AppCompatActivity {
         songList = findViewById(R.id.songList);
         songArrayList = new ArrayList<songList>();
         adapter = new songListAdapter(this, R.layout.songlistadapter_view_layout, songArrayList);
+        adapter.setNotifyOnChange(true);
         songList.setAdapter(adapter);
 
         //songArrayList.add("Loading...");
@@ -264,12 +270,16 @@ public class MainActivity extends AppCompatActivity {
                 try {
 
                     // DELETE
-                    apiObject.getCurrentDeviceThreaded();
+                    //apiObject.getCurrentDeviceThreaded();
 
+                    if(apiObject.playOnCurrentDeviceThreaded(selectedID)){
 
-                    Uri uri = Uri.parse(selectedLink);
-                    Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                    startActivity(intent);
+                    }else {
+
+                        Uri uri = Uri.parse(selectedLink);
+                        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                        startActivity(intent);
+                    }
                 }catch (Exception ex){
 
                 }
@@ -344,11 +354,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if(songArrayList.size() > 0) {
-                    selectedLink = "https://open.spotify.com/track/" + apiObject.displaySongs.get(position).getID();
+                    selectedID = apiObject.displaySongs.get(position).getID();
+                    selectedLink = "https://open.spotify.com/track/" + selectedID;
                     selectedEnergy = apiObject.displaySongs.get(position).getEnergy();
                     selectedHappy = apiObject.displaySongs.get(position).getHappy();
                     selectedDanceability = apiObject.displaySongs.get(position).getDanceability();
                 }
+
+                //view.setSelected(true);
+
                 selectedIndex = position;
                 albumImg.setImageResource(R.drawable.loading);
                 imageThread = new Thread(MainActivity.this::imageSetter);
@@ -361,11 +375,17 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 categorySpinner.setSelection(position);
+
                 songArrayList.clear();
+                apiObject.displaySongs.clear();
                 adapter.notifyDataSetChanged();
+                adapter.notifyDataSetInvalidated();
+
+
                 apiObject.selectedCategory = apiObject.categoryIDs.get(position);
-                apiObject.getPlaylistIDsThreadedCategorySelected();
                 apiObject.gettingSongsFinished = false;
+                apiObject.getPlaylistIDsThreadedCategorySelected();
+
 
                 updateAllSongList = true;
                 updateListThreaded();
