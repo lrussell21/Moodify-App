@@ -17,6 +17,7 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
@@ -50,6 +51,7 @@ public class spotifyAPIFetcher {
 
     private static int saveLastPos = 0;
 
+    public int playlistAmount = 5;
     public double dance, happy, energy;
     public boolean danceCheck = false;
     public boolean happyCheck = false;
@@ -59,6 +61,7 @@ public class spotifyAPIFetcher {
     public volatile boolean updateList = false;
     public double tolerance = 0.15;
     public int threadNumber = 0;
+    private String addSongID = "";
     private Thread playlistIDThreadedCategorySelected = new Thread();
     private boolean playOnCurrentDeviceSucceeded;
 
@@ -422,11 +425,12 @@ public class spotifyAPIFetcher {
 
             JSONObject playlistObj;
             int amountOfPlaylists;
-            if (items.length() > 10) {
-                amountOfPlaylists = 10;
+            if (items.length() > playlistAmount) {
+                amountOfPlaylists = playlistAmount;
             } else {
                 amountOfPlaylists = items.length();
             }
+            // TODO : Change BACK to amountOfPlaylists
             for (int i = 0; i < amountOfPlaylists; i++) {
                 playlistObj = items.getJSONObject(i);
                 playlistIDs.add(playlistObj.getString("id"));
@@ -806,7 +810,7 @@ public class spotifyAPIFetcher {
         return playOnCurrentDeviceSucceeded;
     }
 
-    public void playOnCurrentDevice(){
+    private void playOnCurrentDevice(){
 
         String uriLink = "{\"uris\": [\"spotify:track:" + currentID + "\"]}";
 
@@ -828,12 +832,53 @@ public class spotifyAPIFetcher {
                 System.out.println(conn.getResponseMessage());
                 playOnCurrentDeviceSucceeded = false;
                 conn.disconnect();
+                String selectedLink = "https://open.spotify.com/track/" + currentID;
+                Uri uri = Uri.parse(selectedLink);
+                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                context.startActivity(intent);
                 return;
                 //throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
             }
 
 
 
+
+            conn.disconnect();
+        } catch (MalformedURLException e) {
+            System.out.println(e.getMessage());
+            //e.printStackTrace();
+        } catch (IOException e) {
+            //e.printStackTrace();
+            System.out.println(e.getMessage());
+        }
+    }
+
+
+
+    public void addSongToUserLibraryThreaded(String ID){
+        addSongID = ID;
+        Thread s = new Thread(this::addSongToUserLibrary);
+        s.start();
+    }
+
+
+    private void addSongToUserLibrary(){
+
+        String idsLink = "?ids=" + addSongID;
+
+        String fullOuputString = "";
+        try {
+            URL url = new URL("https://api.spotify.com/v1/me/tracks" + idsLink);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("PUT");
+            conn.setRequestProperty("Authorization", "Bearer " + token);
+
+            if (conn.getResponseCode() != 200) {
+                System.out.println(conn.getResponseMessage());
+                conn.disconnect();
+                return;
+                //throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
+            }
 
             conn.disconnect();
         } catch (MalformedURLException e) {

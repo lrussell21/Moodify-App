@@ -3,11 +3,18 @@ package com.russell.moodify;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.View;
+import android.support.design.widget.NavigationView;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -19,10 +26,16 @@ import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+public class UserMainActivity extends AppCompatActivity
+        implements NavigationView.OnNavigationItemSelectedListener {
+
+
+
+
     spotifyAPIFetcher apiObject;
     createSpotifyAPIFetcher apiObjectStarter;
 
@@ -39,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     SeekBar energySB;
     SeekBar toleranceSB;
     TextView usersName;
+    TextView usersName2;
     TextView danceTV;
     TextView happyTV;
     TextView energyTV;
@@ -60,14 +74,44 @@ public class MainActivity extends AppCompatActivity {
     double selectedHappy = 1;
     double selectedDanceability = 1;
 
-    //@RequiresApi(api = Build.VERSION_CODES.O)
+
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_user_main);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        /*
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        });
+        */
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+
+
+
+
+
+
 
         // Sets up API class objects.
-        apiObject = new spotifyAPIFetcher(MainActivity.this);
+        apiObject = new spotifyAPIFetcher(UserMainActivity.this);
         apiObjectStarter = new createSpotifyAPIFetcher(apiObject);
 
         // If user logs in the api token is in intent.
@@ -89,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "Successfully logged in!",Toast.LENGTH_SHORT).show();
             }else{
                 Toast.makeText(getApplicationContext(), "Failed login!",Toast.LENGTH_SHORT).show();
-                startActivity(new Intent(MainActivity.this, MainLoginScreen.class));
+                startActivity(new Intent(UserMainActivity.this, MainLoginScreen.class));
             }
         }catch (Exception ex){
 
@@ -97,12 +141,21 @@ public class MainActivity extends AppCompatActivity {
 
         apiObject.getCurrentDeviceThreaded();
 
+        //Original
+        //songList = findViewById(R.id.songList);
+        //songArrayList = new ArrayList<String>();
+        //adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_activated_1, songArrayList);
+        //adapter.setNotifyOnChange(true);
+        //songList.setAdapter(adapter);
 
         songList = findViewById(R.id.songList);
         songArrayList = new ArrayList<songList>();
         adapter = new songListAdapter(this, R.layout.songlistadapter_view_layout, songArrayList, apiObject);
         adapter.setNotifyOnChange(true);
         songList.setAdapter(adapter);
+
+        //songArrayList.add("Loading...");
+        //adapter.notifyDataSetChanged();
 
 
         categorySpinner = findViewById(R.id.categorySpinner);
@@ -133,7 +186,8 @@ public class MainActivity extends AppCompatActivity {
         loadingInd = findViewById(R.id.loadingIndicatorImageView);
 
         usersName.setText("Logged in as " + apiObject.username);
-
+        //usersName2 = findViewById(R.id.nav_header_title);
+        //usersName2.setText("Logged in as " + apiObject.username);
 
         //GETTING SONGS STARTER
         //apiObject.getPlaylistIDsThreaded();
@@ -145,6 +199,84 @@ public class MainActivity extends AppCompatActivity {
         updateListThreaded();
 
     }
+
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.user_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+
+        if (id == R.id.nav_camera) {
+            // Handle the camera action
+        } else if (id == R.id.nav_gallery) {
+
+        } else if (id == R.id.nav_slideshow) {
+
+        } else if (id == R.id.nav_manage) {
+
+        } else if (id == R.id.nav_share) {
+
+        } else if (id == R.id.nav_send) {
+
+        } else if (id == R.id.sign_out){
+
+            String filename = "userCredentials";
+            String fileContents = "";
+            FileOutputStream outputStream;
+
+            try {
+                outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
+                outputStream.write(fileContents.getBytes());
+                outputStream.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            startActivity(new Intent(UserMainActivity.this, MainLoginScreen.class));
+
+        }
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+
+
+
+
 
     private void initListeners(){
         danceSB.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -244,12 +376,15 @@ public class MainActivity extends AppCompatActivity {
         });
 
         Button addButton = findViewById(R.id.addButton);
+        addButton.setText("Add");
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 try {
 
                     apiObject.addSongToUserLibraryThreaded(selectedID);
+                    Toast.makeText(getApplicationContext(), "Added " + songNameTextView.getText() + " to your library!",Toast.LENGTH_SHORT).show();
+
                 }catch (Exception ex){
 
                 }
@@ -299,7 +434,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
         songList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -315,7 +449,7 @@ public class MainActivity extends AppCompatActivity {
 
                 selectedIndex = position;
                 albumImg.setImageResource(R.drawable.loading);
-                imageThread = new Thread(MainActivity.this::imageSetter);
+                imageThread = new Thread(UserMainActivity.this::imageSetter);
                 imageThread.start();
             }
         });
@@ -348,6 +482,7 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
     }
 
 
@@ -385,7 +520,7 @@ public class MainActivity extends AppCompatActivity {
         apiObject.displaySongs.clear();
         songList sL;
         for(int i = 0; i < apiObject.allSongs.size(); i++){
-            sL = new songList(apiObject.allSongs.get(i).getSongName(), apiObject.allSongs.get(i).getArtist(), apiObject.allSongs.get(i).getCoverartLinkLight(), apiObject.displaySongs.get(i).getID());
+            sL = new songList(apiObject.allSongs.get(i).getSongName(), apiObject.allSongs.get(i).getArtist(), apiObject.allSongs.get(i).getCoverartLinkLight(), apiObject.allSongs.get(i).getID());
             songArrayList.add(sL);
             apiObject.displaySongs.add(apiObject.allSongs.get(i));
         }
@@ -411,7 +546,7 @@ public class MainActivity extends AppCompatActivity {
      * Initiates updateList with new thread.
      */
     private void updateListThreaded(){
-        updateAllSongListThread = new Thread(MainActivity.this::updateList);
+        updateAllSongListThread = new Thread(UserMainActivity.this::updateList);
         updateAllSongListThread.start();
     }
 
@@ -439,5 +574,7 @@ public class MainActivity extends AppCompatActivity {
         }
         loadingInd.setImageResource(R.color.green);
     }
+
+
 
 }

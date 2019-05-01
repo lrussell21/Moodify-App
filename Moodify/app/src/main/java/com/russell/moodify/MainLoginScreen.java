@@ -45,7 +45,7 @@ public class MainLoginScreen extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         if(checkRefreshToken()){
-            startActivity(new Intent(MainLoginScreen.this, MainActivity.class));
+            startActivity(new Intent(MainLoginScreen.this, UserMainActivity.class));
         }
 
         Button loginButton = findViewById(R.id.loginButton);
@@ -58,7 +58,7 @@ public class MainLoginScreen extends AppCompatActivity {
                 String client_id = getResources().getString(R.string.client_id);
                 //String fullURL = spoturl + "?client_id=" + client_id + "&response_type=code&" + uri + "&scope=playlist-read-private%20user-library-read&state=34fFs29kd09";
                 String fullURL = spoturl + "?client_id=" + client_id + "&response_type=code&" + uri +
-                        "&scope=playlist-read-private%20user-library-read%20user-read-playback-state%20app-remote-control%20user-modify-playback-state%20user-read-currently-playing%20streaming&state=34fFs29kd09";
+                        "&scope=playlist-read-private%20user-library-read%20user-library-modify%20user-read-playback-state%20app-remote-control%20user-modify-playback-state%20user-read-currently-playing%20streaming&state=34fFs29kd09";
 
                 Uri urigo = Uri.parse(fullURL);
                 Intent intent = new Intent(Intent.ACTION_VIEW,urigo);
@@ -72,7 +72,7 @@ public class MainLoginScreen extends AppCompatActivity {
     private boolean checkRefreshToken(){
         String filename = "userCredentials";
         FileInputStream inputStream;
-        StringBuffer datax = new StringBuffer("");
+        StringBuffer datax = new StringBuffer();
         try {
             inputStream = openFileInput(filename);
             InputStreamReader isr = new InputStreamReader(inputStream);
@@ -87,6 +87,9 @@ public class MainLoginScreen extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        //Toast.makeText(getApplicationContext(), "TEST:" + datax.toString() + "|",Toast.LENGTH_LONG).show();
+
 
         if(datax.length() > 1){
             return true;

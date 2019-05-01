@@ -4,11 +4,13 @@ public class songList {
     private String songName;
     private String songArtist;
     private String albumUrl;
+    private String songID;
 
-    public songList(String songName, String songArtist, String albumUrl) {
+    public songList(String songName, String songArtist, String albumUrl, String ID) {
         this.songName = songName;
         this.songArtist = songArtist;
         this.albumUrl = albumUrl;
+        this.songID = ID;
     }
 
     public String getSongName() {
@@ -33,5 +35,9 @@ public class songList {
 
     public void setAlbumUrl(String albumUrl) {
         this.albumUrl = albumUrl;
+    }
+
+    public String getSongID(){
+        return songID;
     }
 }

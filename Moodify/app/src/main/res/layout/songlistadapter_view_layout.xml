@@ -12,14 +12,14 @@
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:cropToPadding="false"
-        android:layout_weight="85"/>
+        android:layout_weight="42"/>
 
     <LinearLayout
         android:orientation="vertical"
-        android:paddingLeft="8dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="15">
+        android:paddingLeft="8dp"
+        android:layout_weight="16">
 
         <TextView
             android:id="@+id/textview1"
@@ -43,6 +43,20 @@
             android:textSize="12sp" />
 
     </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_weight="42">
+
+        <ImageView
+            android:id="@+id/songPlayButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center"
+            tools:srcCompat="@drawable/playcircle" />
+
+    </FrameLayout>
 
 
 
