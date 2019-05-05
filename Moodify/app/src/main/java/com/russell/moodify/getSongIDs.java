@@ -1,5 +1,7 @@
 package com.russell.moodify;
 
+import android.nfc.Tag;
+import android.util.TimingLogger;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -37,6 +39,8 @@ public class getSongIDs implements Runnable {
      * For use with thread. Gets Spotify playlist ID and gets all the songs in the playlist.
      */
     public void run(){
+        TimingLogger timings = new TimingLogger("GettingIDS", "Method");
+        timings.addSplit("Start");
             String fullOuputString = "";
             try {
                 URL url = new URL("https://api.spotify.com/v1/playlists/" + playlistID + "/tracks");
@@ -53,6 +57,8 @@ public class getSongIDs implements Runnable {
                     //throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
                 }
 
+                timings.addSplit("Before BR");
+
                 BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
 
                 String output;
@@ -61,6 +67,9 @@ public class getSongIDs implements Runnable {
                     //System.out.println(output);
                     fullOuputString += output + "\n";
                 }
+
+                timings.addSplit("After BR");
+
                 br.close();
                 conn.disconnect();
             } catch (MalformedURLException e) {
@@ -70,7 +79,10 @@ public class getSongIDs implements Runnable {
             }
 
             // Parse Json received from Spotify
+            timings.addSplit("Parse");
             parseData(fullOuputString);
+            timings.addSplit("Parse Done");
+            timings.dumpToLog();
     }
 
     /**
@@ -106,8 +118,8 @@ public class getSongIDs implements Runnable {
                 coverArtLinkObj = coverArtArray.getJSONObject(1); // 300x300
                 coverArtLinkObj2 = coverArtArray.getJSONObject(2);// 64x64
 
-                newSong = new songs(s, trackObj.getString("id"), artistObj.getString("name"), trackObj.getString("name"), coverArtLinkObj.getString("url"), coverArtLinkObj2.getString("url"));
-
+                newSong = new songs(trackObj.getString("id"), artistObj.getString("name"), trackObj.getString("name"), coverArtLinkObj.getString("url"), coverArtLinkObj2.getString("url"));
+                s.allSongs.add(newSong);
                 System.out.println("CREATED NEW SONG OBJECT-----------------------" + i);
             }
         } catch (JSONException e) {

@@ -10,19 +10,17 @@ public class songs {
 
     /**
      * Initialize song object with specified values.
-     * @param s Spotify api object.
      * @param ID Song's ID.
      * @param artist Song's artist.
      * @param songName Song's name.
      * @param coverartLink Link to song's album cover art.
      */
-    public songs(spotifyAPIFetcher s ,String ID, String artist, String songName, String coverartLink, String coverartLinkLight){
+    public songs(String ID, String artist, String songName, String coverartLink, String coverartLinkLight){
         this.ID = ID;
         this.artist = artist;
         this.songName = songName;
         this.coverartLink = coverartLink;
         this.coverartLinkLight = coverartLinkLight;
-        s.allSongs.add(this);
     }
 
     /**

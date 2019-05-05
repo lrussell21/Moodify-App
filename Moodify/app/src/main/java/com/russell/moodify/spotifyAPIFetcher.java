@@ -1,5 +1,6 @@
 package com.russell.moodify;
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -7,6 +8,7 @@ import android.os.Build;
 import android.provider.Settings;
 import android.support.annotation.RequiresApi;
 import android.util.Base64;
+import android.util.TimingLogger;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -26,6 +28,8 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
+
+import static android.content.Context.ACTIVITY_SERVICE;
 
 
 public class spotifyAPIFetcher {
@@ -51,7 +55,7 @@ public class spotifyAPIFetcher {
 
     private static int saveLastPos = 0;
 
-    public int playlistAmount = 5;
+    public int playlistAmount = 6;
     public double dance, happy, energy;
     public boolean danceCheck = false;
     public boolean happyCheck = false;
@@ -510,6 +514,10 @@ public class spotifyAPIFetcher {
      */
     private void playlistIDToSongs() {
 
+        TimingLogger timings = new TimingLogger("PlaylistIDToSongs", "Test1");
+
+
+
         //TESTING DELETE
         allSongs.clear();
         displaySongs.clear();
@@ -522,44 +530,28 @@ public class spotifyAPIFetcher {
 
         getSongIDs threadSong;
         Thread getFeatures;
-        Thread s[] = new Thread[10]; // Max 10 IDs from categoryToIDs
-        //int saveSize = 0;
+        Thread s[] = new Thread[playlistIDs.size()];
         for (int i = 0; i < playlistIDs.size(); i++) {
             try {
-                //Thread.sleep(100);
-                /*
-                if(currentThreadNumber != threadNumber){
-                    playlistThreadRun = true;
-                    Thread.currentThread().interrupt();
-                    return;
-                }
-                */
                 threadSong = new getSongIDs(this, token, playlistIDs.get(i));
                 s[i] = new Thread(threadSong);
-                System.out.println("Started thread: " + i);
                 s[i].start();
-                //s.join();
-                //updateList = true; // For MainActivity to know when to update list.
-                /*
-                if(i % 3 == 0){
-                    System.out.println("Getting track features...");
-                    getFeatures = new Thread(this::getTrackFeatures);
-                    getFeatures.start();
-                    getFeatures.join();
-                }
-                */
+                System.out.println("Started thread: " + i);
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
             }
         }
-        //updateList = true;
+
         try{
             for(int i = 0; i < s.length; i++){
                 // In case there are less than 10 playlists so a thread in the array isn't started.
-                if(s[i].isAlive()) {
-                    s[i].join();
+                if(s[i] != null) {
+                    if (s[i].isAlive()) {
+                        s[i].join();
+                    }
                 }
             }
+
 
             System.out.println("Getting track features...");
             getFeatures = new Thread(this::getTrackFeatures);
@@ -567,7 +559,7 @@ public class spotifyAPIFetcher {
             getFeatures.join();
 
         }catch (Exception ex){
-
+            System.out.println(ex.getMessage());
         }
 
         updateList = true;
@@ -579,7 +571,9 @@ public class spotifyAPIFetcher {
         }
         gettingSongsFinished = true;
         playlistThreadRun = true;
-        System.out.println("NUMBER OF SONGS: " + allSongs.size());
+        System.out.println("PlaylistIDToSongs NUMBER OF SONGS: " + allSongs.size());
+        timings.addSplit("End");
+        timings.dumpToLog();
     }
 
     //OLD
@@ -852,7 +846,6 @@ public class spotifyAPIFetcher {
             System.out.println(e.getMessage());
         }
     }
-
 
 
     public void addSongToUserLibraryThreaded(String ID){
