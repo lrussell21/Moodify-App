@@ -52,7 +52,6 @@ public class UserMainActivity extends AppCompatActivity
     SeekBar energySB;
     SeekBar toleranceSB;
     TextView usersName;
-    TextView usersName2;
     TextView danceTV;
     TextView happyTV;
     TextView energyTV;
@@ -63,6 +62,7 @@ public class UserMainActivity extends AppCompatActivity
     CheckBox happyCheckBox;
     CheckBox danceCheckBox;
     Spinner categorySpinner;
+    ImageView updateCategories;
     boolean updateSelectedSong = true;
     boolean updateAllSongList = true;
     Thread updateAllSongListThread = null;
@@ -181,6 +181,8 @@ public class UserMainActivity extends AppCompatActivity
         energyCheckBox = findViewById(R.id.energyCheckBox);
         happyCheckBox = findViewById(R.id.happyCheckBox);
         danceCheckBox = findViewById(R.id.danceCheckBox);
+        updateCategories = findViewById(R.id.loadGenre);
+
 
         albumImg = findViewById(R.id.albumImage);
         loadingInd = findViewById(R.id.loadingIndicatorImageView);
@@ -459,14 +461,31 @@ public class UserMainActivity extends AppCompatActivity
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 categorySpinner.setSelection(position);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        updateCategories.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                v.setAlpha(0f);
+                v.setVisibility(View.VISIBLE);
+                v.animate().alpha(0.33f).setDuration(1000);
+
 
                 songArrayList.clear();
                 apiObject.displaySongs.clear();
-                adapter.notifyDataSetChanged();
                 adapter.notifyDataSetInvalidated();
+                adapter.notifyDataSetChanged();
+                listAllSongs();
 
 
-                apiObject.selectedCategory = apiObject.categoryIDs.get(position);
+                apiObject.selectedCategory = apiObject.categoryIDs.get(categorySpinner.getSelectedItemPosition());
                 apiObject.gettingSongsFinished = false;
                 apiObject.getPlaylistIDsThreadedCategorySelected();
 
@@ -475,10 +494,55 @@ public class UserMainActivity extends AppCompatActivity
                 updateListThreaded();
                 Toast.makeText(getApplicationContext(), "Selected new genre!",Toast.LENGTH_SHORT).show();
 
-            }
+                updateCategories.setClickable(false);
 
+
+
+
+
+
+
+                if(energyCheckBox.isChecked()){
+                    energyCheckBox.setChecked(energyCheckBox.isChecked());
+                    //apiObject.energyCheck = true;
+                }
+                if(happyCheckBox.isChecked()){
+                    happyCheckBox.setChecked(happyCheckBox.isChecked());
+                    //apiObject.happyCheck = true;
+                }
+                if(danceCheckBox.isChecked()){
+                    danceCheckBox.setChecked(danceCheckBox.isChecked());
+                    //apiObject.danceCheck = true;
+                }
+
+                energySB.setProgress(0);
+                apiObject.energy = selectedEnergy;
+                energyTV.setText("Energy: 0");
+
+                happySB.setProgress(0);
+                apiObject.happy = selectedHappy;
+                happyTV.setText("Happy: 0");
+
+                danceSB.setProgress(0);
+                apiObject.dance = selectedDanceability;
+                danceTV.setText("Danceability: 0");
+
+                toleranceSB.setProgress(15);
+                toleranceTV.setText("Tolerance: 15");
+
+
+
+                loadingCircleOn();
+
+
+
+            }
+        });
+
+        albumImg.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {
+            public void onClick(View v) {
+                apiObject.playOnCurrentDeviceThreaded(selectedID);
 
             }
         });
@@ -501,6 +565,7 @@ public class UserMainActivity extends AppCompatActivity
      *
      */
     private void filterSongs(){
+
         updateSelectedSong = true;
         updateAllSongList = false;
         apiObject.checkAudioFeatures();
@@ -515,6 +580,9 @@ public class UserMainActivity extends AppCompatActivity
      *
      */
     private void listAllSongs(){
+
+        //loadCircleOff();
+
         updateAllSongList = true;
         songArrayList.clear();
         apiObject.displaySongs.clear();
@@ -556,6 +624,7 @@ public class UserMainActivity extends AppCompatActivity
      */
     private void updateList(){
         loadingInd.setImageResource(android.R.color.holo_red_light);
+
         while(!apiObject.gettingSongsFinished){
             if(updateAllSongList && apiObject.updateList){
                 new Handler(Looper.getMainLooper()).post(new Runnable(){
@@ -572,9 +641,39 @@ public class UserMainActivity extends AppCompatActivity
                 System.out.println(ex.toString());
             }
         }
+
+        loadCircleOff();
+
+        new Handler(Looper.getMainLooper()).post(new Runnable(){
+            @Override
+            public void run() {
+                listAllSongs();
+                updateCategories.setClickable(true);
+                updateCategories.animate().alpha(1f).setDuration(1000);
+            }
+        });
+
         loadingInd.setImageResource(R.color.green);
     }
 
+
+    private void loadingCircleOn(){
+        new Handler(Looper.getMainLooper()).post(new Runnable(){
+            @Override
+            public void run() {
+                findViewById(R.id.loadingCircle).setVisibility(View.VISIBLE);
+            }
+        });
+    }
+
+    private void loadCircleOff(){
+        new Handler(Looper.getMainLooper()).post(new Runnable(){
+            @Override
+            public void run() {
+                findViewById(R.id.loadingCircle).setVisibility(View.GONE);
+            }
+        });
+    }
 
 
 }

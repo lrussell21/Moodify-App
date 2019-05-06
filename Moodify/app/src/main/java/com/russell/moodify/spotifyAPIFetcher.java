@@ -522,11 +522,12 @@ public class spotifyAPIFetcher {
         allSongs.clear();
         displaySongs.clear();
         saveLastPos = 0;
+        updateList = false;
+        //updateList = false;
 
         int currentThreadNumber = threadNumber;
 
         gettingSongsFinished = false;
-        updateList = false;
 
         getSongIDs threadSong;
         Thread getFeatures;
