@@ -55,7 +55,7 @@ public class spotifyAPIFetcher {
 
     private static int saveLastPos = 0;
 
-    public int playlistAmount = 6;
+    public int playlistAmount = 5;
     public double dance, happy, energy;
     public boolean danceCheck = false;
     public boolean happyCheck = false;
@@ -434,7 +434,7 @@ public class spotifyAPIFetcher {
             } else {
                 amountOfPlaylists = items.length();
             }
-            // TODO : Change BACK to amountOfPlaylists
+
             for (int i = 0; i < amountOfPlaylists; i++) {
                 playlistObj = items.getJSONObject(i);
                 playlistIDs.add(playlistObj.getString("id"));
@@ -517,13 +517,11 @@ public class spotifyAPIFetcher {
         TimingLogger timings = new TimingLogger("PlaylistIDToSongs", "Test1");
 
 
-
         //TESTING DELETE
         allSongs.clear();
         displaySongs.clear();
         saveLastPos = 0;
         updateList = false;
-        //updateList = false;
 
         int currentThreadNumber = threadNumber;
 
@@ -538,6 +536,7 @@ public class spotifyAPIFetcher {
                 s[i] = new Thread(threadSong);
                 s[i].start();
                 System.out.println("Started thread: " + i);
+                //Thread.sleep(500);
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
             }
@@ -883,6 +882,12 @@ public class spotifyAPIFetcher {
             System.out.println(e.getMessage());
         }
     }
+
+
+    public void saveSongs(){
+
+    }
+
 
     /**
      * Checks if each songs track features match the user's input in the UI.

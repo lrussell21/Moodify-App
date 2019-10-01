@@ -84,7 +84,6 @@ public class songListAdapter extends ArrayAdapter<songList> {
         holder.playButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Add Song to library
                 apiObject.playOnCurrentDeviceThreaded(songID);
 
                 v.setAlpha(0f);
@@ -97,8 +96,6 @@ public class songListAdapter extends ArrayAdapter<songList> {
         });
 
         Picasso.with(mContext).load(albumUrl).into(holder.albumImage);
-
-
 
         return convertView;
     }

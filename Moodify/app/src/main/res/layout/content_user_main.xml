@@ -33,7 +33,7 @@
         android:layout_height="20dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:max="100"
+        android:max="101"
         android:progress="0"
         android:progressBackgroundTint="@color/colorPrimary"
         app:layout_constraintStart_toStartOf="parent"
@@ -59,7 +59,7 @@
         android:layout_height="20dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:max="100"
+        android:max="101"
         android:progress="0"
         android:progressBackgroundTint="@color/colorPrimary"
         app:layout_constraintStart_toStartOf="parent"
@@ -71,7 +71,7 @@
         android:layout_height="20dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:max="100"
+        android:max="101"
         android:progress="0"
         android:progressBackgroundTint="@color/colorPrimary"
         app:layout_constraintStart_toStartOf="parent"
@@ -83,12 +83,11 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:text="Danceabilty: 0"
+        android:text="Danceabilty: OFF"
         android:textColor="@color/colorPrimary"
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@+id/danceCheckBox"
+        app:layout_constraintStart_toEndOf="@+id/danceSeekBar"
         app:layout_constraintTop_toBottomOf="@+id/happyTextView" />
 
     <TextView
@@ -101,8 +100,7 @@
         android:textColor="@color/colorPrimary"
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@+id/danceCheckBox"
+        app:layout_constraintStart_toEndOf="@+id/toleranceSeekBar"
         app:layout_constraintTop_toBottomOf="@+id/danceTextView" />
 
     <TextView
@@ -111,12 +109,11 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:text="Happy: 0"
+        android:text="Happy: OFF"
         android:textColor="@color/colorPrimary"
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@+id/happyCheckBox"
+        app:layout_constraintStart_toEndOf="@+id/happySeekBar"
         app:layout_constraintTop_toBottomOf="@+id/energyTextView" />
 
     <TextView
@@ -125,12 +122,11 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:text="Energy: 0"
+        android:text="Energy: OFF"
         android:textColor="@color/colorPrimary"
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@+id/energyCheckBox"
+        app:layout_constraintStart_toEndOf="@+id/energySeekBar"
         app:layout_constraintTop_toBottomOf="@+id/addButton" />
 
 
@@ -203,42 +199,6 @@
         android:text="Similar"
         app:layout_constraintStart_toEndOf="@+id/addButton"
         app:layout_constraintTop_toTopOf="@+id/addButton" />
-
-    <CheckBox
-        android:id="@+id/energyCheckBox"
-        android:layout_width="30dp"
-        android:layout_height="25dp"
-        android:layout_marginTop="4dp"
-        android:buttonTint="@color/colorPrimary"
-        android:checked="false"
-        android:clickable="true"
-        android:focusable="true"
-        app:layout_constraintStart_toEndOf="@+id/energySeekBar"
-        app:layout_constraintTop_toBottomOf="@+id/addButton" />
-
-    <CheckBox
-        android:id="@+id/happyCheckBox"
-        android:layout_width="30dp"
-        android:layout_height="25dp"
-        android:layout_marginTop="4dp"
-        android:buttonTint="@color/colorPrimary"
-        android:checked="false"
-        android:clickable="true"
-        android:focusable="true"
-        app:layout_constraintStart_toEndOf="@+id/happySeekBar"
-        app:layout_constraintTop_toBottomOf="@+id/energyCheckBox" />
-
-    <CheckBox
-        android:id="@+id/danceCheckBox"
-        android:layout_width="30dp"
-        android:layout_height="25dp"
-        android:layout_marginTop="4dp"
-        android:buttonTint="@color/colorPrimary"
-        android:checked="false"
-        android:clickable="true"
-        android:focusable="true"
-        app:layout_constraintStart_toEndOf="@+id/danceSeekBar"
-        app:layout_constraintTop_toBottomOf="@+id/happyCheckBox" />
 
     <TextView
         android:id="@+id/usertextView"

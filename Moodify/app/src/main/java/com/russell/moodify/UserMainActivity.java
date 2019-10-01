@@ -30,6 +30,9 @@ import android.widget.Toast;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
+
 public class UserMainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -58,9 +61,6 @@ public class UserMainActivity extends AppCompatActivity
     TextView toleranceTV;
     TextView songNameTextView;
     TextView artistNameTextView;
-    CheckBox energyCheckBox;
-    CheckBox happyCheckBox;
-    CheckBox danceCheckBox;
     Spinner categorySpinner;
     ImageView updateCategories;
     boolean updateSelectedSong = true;
@@ -178,9 +178,6 @@ public class UserMainActivity extends AppCompatActivity
         happyTV = findViewById(R.id.happyTextView);
         energyTV = findViewById(R.id.energyTextView);
         toleranceTV = findViewById(R.id.toleranceTextView);
-        energyCheckBox = findViewById(R.id.energyCheckBox);
-        happyCheckBox = findViewById(R.id.happyCheckBox);
-        danceCheckBox = findViewById(R.id.danceCheckBox);
         updateCategories = findViewById(R.id.loadGenre);
 
 
@@ -284,7 +281,13 @@ public class UserMainActivity extends AppCompatActivity
         danceSB.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                danceTV.setText("Danceability: " + progress);
+                if(progress == 0){
+                    apiObject.danceCheck = FALSE;
+                    danceTV.setText("Danceability: OFF");
+                }else{
+                    apiObject.danceCheck = TRUE;
+                    danceTV.setText("Danceability: " + (progress - 1));
+                }
             }
 
             @Override
@@ -294,15 +297,21 @@ public class UserMainActivity extends AppCompatActivity
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                apiObject.dance = (double)seekBar.getProgress() / 100;
-                filterSongs();
+                apiObject.dance = (double)(seekBar.getProgress() - 1) / 100;
+                checkBoxSongCheck();
             }
         });
 
         happySB.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                happyTV.setText("Happy: " + progress);
+                if(progress == 0){
+                    apiObject.happyCheck = FALSE;
+                    happyTV.setText("Happy: OFF");
+                }else{
+                    apiObject.happyCheck = TRUE;
+                    happyTV.setText("Happy: " + (progress - 1));
+                }
             }
 
             @Override
@@ -312,15 +321,21 @@ public class UserMainActivity extends AppCompatActivity
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                apiObject.happy = (double)seekBar.getProgress() / 100;
-                filterSongs();
+                apiObject.happy = (double)(seekBar.getProgress() - 1) / 100;
+                checkBoxSongCheck();
             }
         });
 
         energySB.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                energyTV.setText("Energy: " + progress);
+                if(progress == 0){
+                    energyTV.setText("Energy: OFF");
+                    apiObject.energyCheck = FALSE;
+                }else{
+                    apiObject.energyCheck = TRUE;
+                    energyTV.setText("Energy: " + (progress - 1));
+                }
             }
 
             @Override
@@ -330,8 +345,11 @@ public class UserMainActivity extends AppCompatActivity
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                apiObject.energy = (double)seekBar.getProgress() / 100;
-                filterSongs();
+                apiObject.energy = (double)(seekBar.getProgress() - 1) / 100;
+
+                System.out.println("ENERGY:" + apiObject.energy);
+
+                checkBoxSongCheck();
             }
         });
 
@@ -353,29 +371,6 @@ public class UserMainActivity extends AppCompatActivity
             }
         });
 
-        energyCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                apiObject.energyCheck = isChecked;
-                checkBoxSongCheck();
-            }
-        });
-
-        happyCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                apiObject.happyCheck = isChecked;
-                checkBoxSongCheck();
-            }
-        });
-
-        danceCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                apiObject.danceCheck = isChecked;
-                checkBoxSongCheck();
-            }
-        });
 
         Button addButton = findViewById(R.id.addButton);
         addButton.setText("Add");
@@ -400,30 +395,22 @@ public class UserMainActivity extends AppCompatActivity
             public void onClick(View v) {
                 // Similar
                 // Set tolerance to 10, set bars to songs.
-                if(!energyCheckBox.isChecked()){
-                    energyCheckBox.setChecked(!energyCheckBox.isChecked());
-                    //apiObject.energyCheck = true;
-                }
-                if(!happyCheckBox.isChecked()){
-                    happyCheckBox.setChecked(!happyCheckBox.isChecked());
-                    //apiObject.happyCheck = true;
-                }
-                if(!danceCheckBox.isChecked()){
-                    danceCheckBox.setChecked(!danceCheckBox.isChecked());
-                    //apiObject.danceCheck = true;
-                }
 
                 energySB.setProgress((int)(selectedEnergy * 100));
                 apiObject.energy = selectedEnergy;
                 energyTV.setText("Energy: " + (int)(selectedEnergy * 100));
+                apiObject.energyCheck = TRUE;
 
                 happySB.setProgress((int)(selectedHappy * 100));
                 apiObject.happy = selectedHappy;
                 happyTV.setText("Happy: " + (int)(selectedHappy * 100));
+                apiObject.happyCheck = TRUE;
 
                 danceSB.setProgress((int)(selectedDanceability * 100));
                 apiObject.dance = selectedDanceability;
                 danceTV.setText("Danceability: " + (int)(selectedDanceability * 100));
+                apiObject.danceCheck = TRUE;
+
 
                 toleranceSB.setProgress(10);
                 toleranceTV.setText("Tolerance: 10");
@@ -500,32 +487,21 @@ public class UserMainActivity extends AppCompatActivity
 
 
 
-
-
-                if(energyCheckBox.isChecked()){
-                    energyCheckBox.setChecked(energyCheckBox.isChecked());
-                    //apiObject.energyCheck = true;
-                }
-                if(happyCheckBox.isChecked()){
-                    happyCheckBox.setChecked(happyCheckBox.isChecked());
-                    //apiObject.happyCheck = true;
-                }
-                if(danceCheckBox.isChecked()){
-                    danceCheckBox.setChecked(danceCheckBox.isChecked());
-                    //apiObject.danceCheck = true;
-                }
-
                 energySB.setProgress(0);
                 apiObject.energy = selectedEnergy;
-                energyTV.setText("Energy: 0");
+                energyTV.setText("Energy: OFF");
+                apiObject.energyCheck = FALSE;
 
                 happySB.setProgress(0);
                 apiObject.happy = selectedHappy;
-                happyTV.setText("Happy: 0");
+                happyTV.setText("Happy: OFF");
+                apiObject.happyCheck = FALSE;
 
                 danceSB.setProgress(0);
                 apiObject.dance = selectedDanceability;
-                danceTV.setText("Danceability: 0");
+                danceTV.setText("Danceability: OFF");
+                apiObject.danceCheck = FALSE;
+
 
                 toleranceSB.setProgress(15);
                 toleranceTV.setText("Tolerance: 15");
